@@ -175,7 +175,7 @@
     #volume-slider {
       -webkit-appearance: none;
       width: 130px;
-      height: 10px;
+      height: 7px;
       border-radius: 8px;
       background: linear-gradient(90deg, #d06aff 0%, #ff7aff 100%);
       outline: none;
@@ -183,19 +183,21 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      position: relative;
+      top: -2px;
     }
     #volume-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 20px;
-      height: 20px;
+      width: 15px;
+      height: 15px;
       border-radius: 50%;
       background: #fff;
       cursor: pointer;
       box-shadow: 0 0 6px #ff7aff;
       transition: background 0.3s ease;
-      margin-top: -5px; /* vertically center thumb */
       position: relative;
+      top: -0px;
       z-index: 1;
     }
     #volume-slider::-webkit-slider-thumb:hover {
@@ -459,21 +461,9 @@
   <div id="custom-cursor"></div>
 
   <!-- Background Audio -->
-  <iframe
-    id="bg-audio"
-    width="0"
-    height="0"
-    src="https://www.youtube.com/embed/HEE36IyMBUo?autoplay=1&loop=1&playlist=HEE36IyMBUo&controls=0&mute=0&enablejsapi=1"
-    frameborder="0"
-    allow="autoplay; encrypted-media"
-    allowfullscreen
-    style="display:none;"
-  ></iframe>
-
-  <!-- Click Sound Effect -->
-  <audio id="click-sound" src="https://www.youtube.com/watch?v=HEE36IyMBUo" preload="auto" style="display:none;"></audio>
-
-  <script src="https://www.youtube.com/iframe_api"></script>
+  <audio id="bg-audio" autoplay loop>
+    <source src="https://i.imgur.com/14M7JIo.mp4" type="audio/mp4">
+  </audio>
   <script>
     // === STAR BACKGROUND ===
     const canvas = document.getElementById('starCanvas');
@@ -697,23 +687,12 @@
     });
 
     // === AUDIO CONTROL ===
-    let bgPlayer;
+    const bgAudio = document.getElementById('bg-audio');
     const clickSound = document.getElementById('click-sound');
-    
-    function onYouTubeIframeAPIReady() {
-      bgPlayer = new YT.Player('bg-audio', {
-        events: {
-          onReady: (event) => {
-            bgPlayer.setVolume(document.getElementById('volume-slider').value);
-          }
-        }
-      });
-    }
-
     function playClickSound() {
       // Create a temporary audio element for the click sound
       const clickAudio = new Audio();
-      clickAudio.src = "https://www.youtube.com/watch?v=HEE36IyMBUo";
+      clickAudio.src = "https://i.imgur.com/14M7JIo.mp4";
       clickAudio.volume = 0.3; // Lower volume for click sounds
       clickAudio.play().catch(e => console.log("Audio play prevented:", e));
     }
@@ -731,9 +710,13 @@
     });
 
     volumeSlider.addEventListener('input', () => {
-      if (bgPlayer) {
-        bgPlayer.setVolume(volumeSlider.value);
-      }
+      bgAudio.volume = volumeSlider.value / 100;
+    });
+
+    // Start playing audio immediately
+    document.addEventListener('DOMContentLoaded', () => {
+      bgAudio.volume = volumeSlider.value / 100;
+      bgAudio.play().catch(e => console.log("Autoplay prevented:", e));
     });
 
     // === COMMAND INPUT ===
@@ -818,16 +801,8 @@
 
       // Mute command
       if (command === '/mute') {
-        if (bgPlayer) {
-          const wasMuted = bgPlayer.isMuted();
-          if (wasMuted) {
-            bgPlayer.unMute();
-            showCommandMessage('> Audio unmuted');
-          } else {
-            bgPlayer.mute();
-            showCommandMessage('> Audio muted');
-          }
-        }
+        bgAudio.muted = !bgAudio.muted;
+        showCommandMessage(bgAudio.muted ? '> Audio muted' : '> Audio unmuted');
         return;
       }
 
