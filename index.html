@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Silver - Bio</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap');
+    /* COMMON STYLES */
+    html, body {
+      margin: 0; padding: 0; height: 100%; overflow: hidden;
+      font-family: 'Orbitron', sans-serif;
+      background-color: #030011;
+      cursor: none;
+      color: #d06aff;
+      user-select: none;
+    }
+    canvas {
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    /* BIO PAGE */
+    body.bio .glow-container {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    body.bio .profile-wrapper {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      margin-bottom: 20px;
+      z-index: 10;
+      cursor: pointer;
+    }
+    body.bio .profile-pic-container {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 4px solid #d06aff;
+      box-shadow: 0 0 25px #d06aff88;
+      transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+      position: relative;
+      z-index: 11;
+      overflow: hidden;
+    }
+    body.bio .profile-pic {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      animation: spin 20s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    body.bio .profile-wrapper:hover .profile-pic-container {
+      transform: scale(1.1);
+      border-color: #ff7aff;
+      box-shadow:
+        0 0 30px #ff7aff,
+        0 0 60px #ff7aff88;
+    }
+    body.bio .orbit-star {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: radial-gradient(circle, #d06aff 60%, transparent 100%);
+      border-radius: 50%;
+      box-shadow: 0 0 12px #d06aff;
+      filter: drop-shadow(0 0 5px #d06aff);
+      z-index: 12;
+      pointer-events: none;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      opacity: 1;
+      transform-origin: center;
+    }
+    body.bio .orbit-star.second {
+      background: radial-gradient(circle, #ff7aff 60%, transparent 100%);
+      box-shadow: 0 0 15px #ff7aff;
+      filter: drop-shadow(0 0 7px #ff7aff);
+    }
+    body.bio .profile-wrapper:hover .orbit-star {
+      opacity: 0;
+      transform: scale(0);
+    }
+    body.bio h1 {
+      font-size: 5rem;
+      color: #444;
+      display: flex;
+      gap: 10px;
+      margin: 0;
+      z-index: 10;
+      user-select: none;
+      transition: transform 0.3s ease;
+      justify-content: center;
+    }
+    body.bio h1:hover {
+      transform: scale(1.25);
+    }
+    body.bio h1 span {
+      color: #d06aff;
+      opacity: 0.2;
+      text-shadow: none;
+      transition: opacity 0.6s ease-in-out, text-shadow 0.6s ease-in-out;
+    }
+    body.bio h1 span.active {
+      opacity: 1;
+      text-shadow:
+        0 0 10px #d06aff,
+        0 0 20px #d06aff,
+        0 0 40px #d06aff;
+    }
+
+    /* VOLUME CONTROL */
+    #volume-control {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+      background: rgba(208, 106, 255, 0.15);
+      border-radius: 12px;
+      padding: 8px 12px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 0 10px #d06aff88;
+    }
+    #volume-button {
+      cursor: pointer;
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: rgba(80, 0, 120, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow:
+        0 0 10px #d06aff88,
+        inset 0 0 8px #d06affaa;
+      transition: all 0.3s ease;
+    }
+    #volume-button:hover {
+      background: rgba(255, 122, 255, 0.3);
+      box-shadow:
+        0 0 20px #ff7affdd,
+        inset 0 0 12px #ff7affee;
+    }
+    #volume-button img {
+      width: 30px;
+      height: 30px;
+      filter: drop-shadow(0 0 4px #d06aff);
+      transition: filter 0.3s ease;
+    }
+    #volume-button:hover img {
+      filter: drop-shadow(0 0 8px #ff7aff);
+    }
+    #volume-slider-container {
+      overflow: hidden;
+      width: 0;
+      transition: width 0.4s ease;
+    }
+    #volume-slider-container.open {
+      width: 130px;
+    }
+    #volume-slider {
+      -webkit-appearance: none;
+      width: 130px;
+      height: 10px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #d06aff 0%, #ff7aff 100%);
+      outline: none;
+      cursor: pointer;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    #volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 6px #ff7aff;
+      transition: background 0.3s ease;
+      margin-top: -5px; /* vertically center thumb */
+      position: relative;
+      z-index: 1;
+    }
+    #volume-slider::-webkit-slider-thumb:hover {
+      background: #ff7aff;
+    }
+    #volume-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 6px #ff7aff;
+      transition: background 0.3s ease;
+      border: none;
+      position: relative;
+      z-index: 1;
+    }
+    #volume-slider::-moz-range-thumb:hover {
+      background: #ff7aff;
+    }
+
+    /* CUSTOM CURSOR */
+    #custom-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #d06aff;
+      box-shadow:
+        0 0 10px #d06aff,
+        0 0 20px #d06aff88;
+      transform: translate(-50%, -50%);
+      z-index: 30;
+    }
+
+    /* LINKS PAGE */
+    body.links {
+      cursor: default;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      gap: 50px;
+      background-color: #030011;
+      overflow: visible;
+      color: #d06aff;
+      user-select: none;
+    }
+    /* Container to animate scale */
+    .links-container {
+      transform: scale(0);
+      animation: scaleIn 0.5s ease-out forwards;
+      text-align: center;
+      z-index: 10;
+    }
+    @keyframes scaleIn {
+      to {
+        transform: scale(1);
+      }
+    }
+
+    body.links h1 {
+      font-size: 3rem;
+      margin-bottom: 30px;
+      color: #d06aff;
+      text-shadow:
+        0 0 20px #d06aff,
+        0 0 40px #d06aff;
+      user-select: none;
+      transition: transform 0.3s ease;
+    }
+    body.links h1:hover {
+      transform: scale(1.25);
+    }
+    body.links .icons {
+      display: flex;
+      gap: 60px;
+      z-index: 10;
+    }
+    body.links a.icon-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #d06aff;
+      text-decoration: none;
+      transition:
+        transform 0.3s ease,
+        color 0.3s ease,
+        filter 0.3s ease,
+        opacity 0.3s ease;
+      filter: drop-shadow(0 0 6px #d06aff);
+      cursor: pointer;
+      user-select: none;
+    }
+    body.links a.icon-link:hover {
+      color: #ff7aff;
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 20px #ff7aff);
+    }
+    body.links a.icon-link:active {
+      transform: scale(1.25);
+    }
+    body.links a.icon-link img {
+      width: 90px;
+      height: 90px;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 0 8px currentColor);
+      user-select: none;
+    }
+    body.links a.icon-link span {
+      font-size: 1.3rem;
+      user-select: none;
+    }
+
+    /* BACK BUTTON */
+    #back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(208, 106, 255, 0.15);
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-family: 'Orbitron', sans-serif;
+      color: #d06aff;
+      font-size: 1.2rem;
+      border: 2px solid #d06aff;
+      cursor: pointer;
+      user-select: none;
+      box-shadow:
+        0 0 8px #d06aff88,
+        inset 0 0 6px #d06affaa;
+      transition:
+        background 0.3s ease,
+        color 0.3s ease,
+        box-shadow 0.3s ease,
+        transform 0.2s ease;
+      z-index: 25;
+    }
+    #back-button:hover {
+      background: rgba(255, 122, 255, 0.3);
+      color: #ff7aff;
+      box-shadow:
+        0 0 16px #ff7affdd,
+        inset 0 0 12px #ff7affee;
+      transform: scale(1.1);
+    }
+    #back-button:active {
+      transform: scale(0.95);
+    }
+    
+    /* COMMAND INPUT */
+    #command-container {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 300px;
+      z-index: 20;
+    }
+    #command-input {
+      width: 100%;
+      background: rgba(208, 106, 255, 0.15);
+      border-radius: 12px;
+      padding: 16px;
+      font-family: 'Orbitron', sans-serif;
+      color: #d06aff;
+      font-size: 1.2rem;
+      border: 2px solid #d06aff;
+      box-shadow:
+        0 0 8px #d06aff88,
+        inset 0 0 6px #d06affaa;
+      backdrop-filter: blur(6px);
+      transition: all 0.3s ease;
+      outline: none;
+      cursor: text;
+      user-select: text;
+    }
+    #command-input:hover, #command-input:focus {
+      background: rgba(255, 122, 255, 0.3);
+      color: #ff7aff;
+      box-shadow:
+        0 0 16px #ff7affdd,
+        inset 0 0 12px #ff7affee;
+    }
+    #command-input::placeholder {
+      color: #d06aff;
+      opacity: 0.7;
+    }
+    
+    /* COMMAND DISPLAY */
+    #command-display {
+      position: absolute;
+      bottom: 80px;
+      left: 0;
+      width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+    }
+    .command-message {
+      background: rgba(208, 106, 255, 0.2);
+      border-radius: 8px;
+      padding: 10px 15px;
+      font-size: 1rem;
+      color: #d06aff;
+      border: 1px solid #d06aff;
+      box-shadow: 0 0 10px #d06aff88;
+      animation: fadeIn 0.3s ease-out;
+      opacity: 1;
+      transition: opacity 1s ease;
+    }
+    .command-message.fade-out {
+      opacity: 0;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bio">
+  <canvas id="starCanvas"></canvas>
+
+  <div class="glow-container">
+    <div class="profile-wrapper" id="profile-wrapper" title="Click to open links">
+      <div class="profile-pic-container">
+        <img class="profile-pic" src="https://i.imgur.com/OMTn3DM.png" alt="Silver Profile Picture" />
+      </div>
+      <div class="orbit-star first" id="orbit-star-1"></div>
+      <div class="orbit-star second" id="orbit-star-2"></div>
+      <div class="orbit-star first" id="orbit-star-3"></div>
+      <div class="orbit-star second" id="orbit-star-4"></div>
+    </div>
+    <h1 id="name">
+      <span>S</span><span>I</span><span>L</span><span>V</span><span>E</span><span>R</span>
+    </h1>
+  </div>
+
+  <!-- Volume Control -->
+  <div id="volume-control">
+    <div id="volume-button" title="Volume Control">
+      <img src="https://i.imgur.com/IDewbtz.png" alt="Volume" />
+    </div>
+    <div id="volume-slider-container">
+      <input id="volume-slider" type="range" min="0" max="100" value="100" />
+    </div>
+  </div>
+
+  <!-- Command Input -->
+  <div id="command-container">
+    <div id="command-display"></div>
+    <input type="text" id="command-input" placeholder="Type a command..." />
+  </div>
+
+  <!-- Custom cursor dot -->
+  <div id="custom-cursor"></div>
+
+  <!-- Background Audio -->
+  <iframe
+    id="bg-audio"
+    width="0"
+    height="0"
+    src="https://www.youtube.com/embed/HEE36IyMBUo?autoplay=1&loop=1&playlist=HEE36IyMBUo&controls=0&mute=0&enablejsapi=1"
+    frameborder="0"
+    allow="autoplay; encrypted-media"
+    allowfullscreen
+    style="display:none;"
+  ></iframe>
+
+  <!-- Click Sound Effect -->
+  <audio id="click-sound" src="https://www.youtube.com/watch?v=HEE36IyMBUo" preload="auto" style="display:none;"></audio>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    // === STAR BACKGROUND ===
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    const STAR_COUNT = 180;
+    const stars = [];
+    let starSpeedMultiplier = 1; // Default speed
+    let isAnimatingSpeed = false;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    function createStar() {
+      const sizeCategory = Math.random();
+      let length, alpha, lineWidth;
+
+      if (sizeCategory < 0.7) {
+        length = 30 + Math.random() * 30;
+        alpha = 0.3 + Math.random() * 0.3;
+        lineWidth = 1;
+      } else {
+        length = 60 + Math.random() * 50;
+        alpha = 0.6 + Math.random() * 0.3;
+        lineWidth = 2;
+      }
+
+      return {
+        x: Math.random() * width,
+        y: Math.random() * height,
+        length,
+        alpha,
+        lineWidth,
+        speed: 1 + Math.random() * 0.6,
+        offset: Math.random() * 1000
+      };
+    }
+
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push(createStar());
+    }
+
+    // Variables for cursor speed to affect stars (dampened)
+    let lastMouseX = null;
+    let lastMouseY = null;
+    let cursorSpeed = 0;
+
+    window.addEventListener('mousemove', e => {
+      if(lastMouseX !== null && lastMouseY !== null) {
+        const dx = e.clientX - lastMouseX;
+        const dy = e.clientY - lastMouseY;
+        cursorSpeed = Math.sqrt(dx*dx + dy*dy);
+      }
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    });
+
+    // Function to temporarily increase star speed
+    function speedUpStars() {
+      if (isAnimatingSpeed) return;
+      
+      isAnimatingSpeed = true;
+      starSpeedMultiplier = 5; // Speed up stars
+      
+      // Gradually slow down after 1 second
+      setTimeout(() => {
+        const slowDownInterval = setInterval(() => {
+          starSpeedMultiplier = Math.max(1, starSpeedMultiplier - 0.2);
+          if (starSpeedMultiplier <= 1) {
+            clearInterval(slowDownInterval);
+            starSpeedMultiplier = 1;
+            isAnimatingSpeed = false;
+          }
+        }, 100);
+      }, 1000);
+    }
+
+    // Custom cursor dots
+    const customCursor = document.getElementById('custom-cursor');
+    const dots = [];
+    const maxDots = 50;
+
+    window.addEventListener('mousemove', (e) => {
+      customCursor.style.left = e.clientX + 'px';
+      customCursor.style.top = e.clientY + 'px';
+
+      // Add new dot at cursor position
+      if (dots.length < maxDots) {
+        dots.push({
+          x: e.clientX,
+          y: e.clientY,
+          size: 6 + Math.random() * 4,
+          alpha: 0.15 + Math.random() * 0.1,
+          speedX: (Math.random() - 0.5) * 0.3,
+          speedY: 0.3 + Math.random() * 0.3
+        });
+      }
+    });
+
+    function animateStars() {
+      ctx.clearRect(0, 0, width, height);
+
+      const speedMultiplier = (0.06 + Math.min(cursorSpeed * 0.005, 0.5)) * starSpeedMultiplier;
+
+      for (let i = 0; i < stars.length; i++) {
+        const star = stars[i];
+
+        star.x += star.speed * speedMultiplier;
+        star.y += star.speed * speedMultiplier;
+
+        ctx.beginPath();
+        ctx.moveTo(star.x, star.y);
+        ctx.lineTo(star.x - star.length, star.y - star.length);
+        ctx.strokeStyle = `rgba(208, 106, 255, ${star.alpha})`;
+        ctx.lineWidth = star.lineWidth;
+        ctx.shadowColor = "rgba(208, 106, 255, 0.7)";
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+
+        if (star.y - star.length > height || star.x - star.length > width) {
+          stars[i] = createStar();
+          stars[i].y = -stars[i].length;
+          stars[i].x = Math.random() * width;
+        }
+      }
+
+      // Draw trailing dots from cursor
+      for(let i = dots.length -1; i >= 0; i--) {
+        const d = dots[i];
+        d.x += d.speedX;
+        d.y += d.speedY;
+        d.alpha -= 0.007;
+        d.size *= 0.96;
+
+        if(d.alpha <= 0 || d.size <= 0.3) {
+          dots.splice(i,1);
+          continue;
+        }
+
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.size, 0, 2 * Math.PI);
+        ctx.fillStyle = `rgba(208, 106, 255, ${d.alpha})`;
+        ctx.shadowColor = "rgba(208, 106, 255, 0.8)";
+        ctx.shadowBlur = 10;
+        ctx.fill();
+      }
+
+      requestAnimationFrame(animateStars);
+    }
+    animateStars();
+
+    // === NAME GLOW ANIMATION ===
+    const nameSpans = document.querySelectorAll('h1#name span');
+    let activeIndex = 0;
+    const glowInterval = 1700;
+
+    function animateNameGlow() {
+      nameSpans.forEach((span) => {
+        span.classList.remove('active');
+      });
+      nameSpans[activeIndex].classList.add('active');
+      activeIndex = (activeIndex + 1) % nameSpans.length;
+    }
+    let nameGlowTimer = setInterval(animateNameGlow, glowInterval);
+    animateNameGlow();
+
+    // === ORBIT STARS ANIMATION ===
+    const profileWrapper = document.getElementById('profile-wrapper');
+    const orbitStars = [
+      document.getElementById('orbit-star-1'),
+      document.getElementById('orbit-star-2'),
+      document.getElementById('orbit-star-3'),
+      document.getElementById('orbit-star-4')
+    ];
+    
+    // Orbit parameters - slower speeds
+    const orbitRadius = 120; // Distance from center of profile pic
+    const orbitSpeeds = [0.2, -0.3, 0.4, -0.5]; // Slower rotation speeds
+    let orbitAngles = [0, Math.PI/2, Math.PI, 3*Math.PI/2]; // Starting angles
+    
+    function animateOrbitStars() {
+      const centerX = profileWrapper.offsetLeft + profileWrapper.offsetWidth / 2;
+      const centerY = profileWrapper.offsetTop + profileWrapper.offsetHeight / 2;
+      
+      orbitStars.forEach((star, index) => {
+        // Update angle based on speed (slower)
+        orbitAngles[index] += orbitSpeeds[index] * 0.01;
+        
+        // Calculate new position
+        const x = centerX + Math.cos(orbitAngles[index]) * orbitRadius;
+        const y = centerY + Math.sin(orbitAngles[index]) * orbitRadius;
+        
+        // Apply position to star
+        star.style.left = `${x - centerX + 110}px`;
+        star.style.top = `${y - centerY + 110}px`;
+      });
+      
+      requestAnimationFrame(animateOrbitStars);
+    }
+    
+    // Start the orbit animation
+    animateOrbitStars();
+
+    // Shrink effect on hover
+    profileWrapper.addEventListener('mouseenter', () => {
+      orbitStars.forEach(s => {
+        s.style.opacity = '0';
+        s.style.transform = 'scale(0)';
+      });
+    });
+    profileWrapper.addEventListener('mouseleave', () => {
+      orbitStars.forEach(s => {
+        s.style.opacity = '1';
+        s.style.transform = '';
+      });
+    });
+
+    // === AUDIO CONTROL ===
+    let bgPlayer;
+    const clickSound = document.getElementById('click-sound');
+    
+    function onYouTubeIframeAPIReady() {
+      bgPlayer = new YT.Player('bg-audio', {
+        events: {
+          onReady: (event) => {
+            bgPlayer.setVolume(document.getElementById('volume-slider').value);
+          }
+        }
+      });
+    }
+
+    function playClickSound() {
+      // Create a temporary audio element for the click sound
+      const clickAudio = new Audio();
+      clickAudio.src = "https://www.youtube.com/watch?v=HEE36IyMBUo";
+      clickAudio.volume = 0.3; // Lower volume for click sounds
+      clickAudio.play().catch(e => console.log("Audio play prevented:", e));
+    }
+
+    // Volume control for background audio
+    const volumeButton = document.getElementById('volume-button');
+    const volumeSliderContainer = document.getElementById('volume-slider-container');
+    const volumeSlider = document.getElementById('volume-slider');
+    let volumeOpen = false;
+
+    volumeButton.addEventListener('click', () => {
+      playClickSound();
+      volumeOpen = !volumeOpen;
+      volumeSliderContainer.classList.toggle('open', volumeOpen);
+    });
+
+    volumeSlider.addEventListener('input', () => {
+      if (bgPlayer) {
+        bgPlayer.setVolume(volumeSlider.value);
+      }
+    });
+
+    // === COMMAND INPUT ===
+    const commandInput = document.getElementById('command-input');
+    const commandDisplay = document.getElementById('command-display');
+    
+    // Command dictionary
+    const commands = {
+        // Media
+        '/yt': { url: 'https://www.youtube.com/', desc: 'Opens YouTube' },
+        '/youtube': { url: 'https://www.youtube.com/', desc: 'Opens YouTube' },
+        '/cc': { url: 'https://www.crunchyroll.com/discover', desc: 'Opens Crunchyroll' },
+        '/crunchyroll': { url: 'https://www.crunchyroll.com/discover', desc: 'Opens Crunchyroll' },
+        '/sp': { url: 'https://open.spotify.com/', desc: 'Opens Spotify' },
+        '/spotify': { url: 'https://open.spotify.com/', desc: 'Opens Spotify' },
+        '/tt': { url: 'https://www.tiktok.com/', desc: 'Opens TikTok' },
+        '/tiktok': { url: 'https://www.tiktok.com/', desc: 'Opens TikTok' },
+        
+        // Social
+        '/dc': { url: 'https://discord.com/channels/@me', desc: 'Opens Discord' },
+        '/discord': { url: 'https://discord.com/channels/@me', desc: 'Opens Discord' },
+        '/insta': { url: 'https://www.instagram.com/reels/', desc: 'Opens Instagram Reels' },
+        '/instagram': { url: 'https://www.instagram.com/reels/', desc: 'Opens Instagram Reels' },
+        
+        // Google Services
+        '/gm': { url: 'https://mail.google.com/mail/u/0/#inbox', desc: 'Opens Gmail' },
+        '/gmail': { url: 'https://mail.google.com/mail/u/0/#inbox', desc: 'Opens Gmail' },
+        '/gd': { url: 'https://drive.google.com/drive/u/0/home', desc: 'Opens Google Drive' },
+        '/google drive': { url: 'https://drive.google.com/drive/u/0/home', desc: 'Opens Google Drive' },
+        
+        // Tools
+        '/gh': { url: 'https://github.com/', desc: 'Opens GitHub' },
+        '/github': { url: 'https://github.com/', desc: 'Opens GitHub' },
+        '/rbg': { url: 'https://www.adobe.com/express/feature/image/remove-background', desc: 'Background Remover' },
+        '/remove bg': { url: 'https://www.adobe.com/express/feature/image/remove-background', desc: 'Background Remover' },
+        '/convert': { url: 'https://cobalt.tools/', desc: 'Media Downloader' },
+        '/converter': { url: 'https://cobalt.tools/', desc: 'Media Downloader' }
+    };
+
+    // Focus the input when clicking
+    commandInput.addEventListener('click', () => {
+      playClickSound();
+      commandInput.focus();
+    });
+    
+    // Handle command submission
+    commandInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        playClickSound();
+        const command = commandInput.value.trim().toLowerCase();
+        if (command) {
+          // Create and display the command message
+          const message = document.createElement('div');
+          message.className = 'command-message';
+          message.textContent = `> ${command}`;
+          commandDisplay.prepend(message);
+          
+          // Clear the input
+          commandInput.value = '';
+          
+          // Set timeout to fade out after 5 seconds
+          setTimeout(() => {
+            message.classList.add('fade-out');
+            // Remove the element after fade completes
+            setTimeout(() => {
+              message.remove();
+            }, 1000);
+          }, 5000);
+          
+          // Handle special commands
+          handleSpecialCommand(command);
+        }
+      }
+    });
+
+    function handleSpecialCommand(command) {
+      // Help command
+      if (command === '/help' || command === '?help') {
+        showHelp();
+        return;
+      }
+
+      // Mute command
+      if (command === '/mute') {
+        if (bgPlayer) {
+          const wasMuted = bgPlayer.isMuted();
+          if (wasMuted) {
+            bgPlayer.unMute();
+            showCommandMessage('> Audio unmuted');
+          } else {
+            bgPlayer.mute();
+            showCommandMessage('> Audio muted');
+          }
+        }
+        return;
+      }
+
+      // Check if command exists
+      if (commands[command]) {
+        window.open(commands[command].url, '_blank');
+      }
+    }
+
+    function showCommandMessage(text) {
+      const msg = document.createElement('div');
+      msg.className = 'command-message';
+      msg.textContent = text;
+      commandDisplay.prepend(msg);
+      setTimeout(() => {
+        msg.classList.add('fade-out');
+        setTimeout(() => msg.remove(), 1000);
+      }, 5000);
+    }
+
+    function showHelp() {
+      const helpMessage = document.createElement('div');
+      helpMessage.className = 'command-message';
+      
+      let helpText = '<strong>Available Commands:</strong><br><br>';
+      
+      // Group commands by category
+      const categories = {
+        'Media': ['yt', 'youtube', 'cc', 'crunchyroll', 'sp', 'spotify', 'tt', 'tiktok'],
+        'Social': ['dc', 'discord', 'insta', 'instagram'],
+        'Google Services': ['gm', 'gmail', 'gd', 'google drive'],
+        'Tools': ['gh', 'github', 'rbg', 'remove bg', 'convert', 'converter']
+      };
+      
+      // Build help text by categories
+      for (const [category, cmds] of Object.entries(categories)) {
+        helpText += `<strong>${category}:</strong><br>`;
+        cmds.forEach(cmd => {
+          const fullCmd = `/${cmd}`;
+          if (commands[fullCmd]) {
+            helpText += `<strong>${fullCmd}</strong> - ${commands[fullCmd].desc}<br>`;
+          }
+        });
+        helpText += '<br>';
+      }
+      
+      // Add special commands
+      helpText += `<strong>Special Commands:</strong><br>`;
+      helpText += `<strong>/mute</strong> - Toggle audio mute<br>`;
+      helpText += `<strong>/help</strong> - Show this help message<br>`;
+      
+      helpText += '<br>Type any command and press Enter to execute it.';
+      
+      helpMessage.innerHTML = helpText;
+      commandDisplay.prepend(helpMessage);
+      
+      // Set timeout to fade out after 10 seconds (longer for help)
+      setTimeout(() => {
+        helpMessage.classList.add('fade-out');
+        setTimeout(() => {
+          helpMessage.remove();
+        }, 1000);
+      }, 10000);
+    }
+
+    // === PAGE SWITCHING ===
+
+    function createLinksPage() {
+      // Speed up stars when clicking profile picture
+      speedUpStars();
+      playClickSound();
+      
+      // Remove bio elements
+      document.querySelector('.glow-container').remove();
+      document.getElementById('volume-control').style.display = 'none';
+      document.getElementById('command-container').style.display = 'none';
+
+      document.body.classList.remove('bio');
+      document.body.classList.add('links');
+
+      // Show custom cursor again
+      document.getElementById('custom-cursor').style.display = 'block';
+
+      // Create container with scaling animation class
+      const container = document.createElement('div');
+      container.classList.add('links-container');
+
+      // Title: your name smaller
+      const title = document.createElement('h1');
+      title.textContent = 'Silver';
+
+      // Icons container
+      const iconsDiv = document.createElement('div');
+      iconsDiv.classList.add('icons');
+
+      const linksData = [
+        {
+          name: 'YouTube',
+          url: 'https://www.youtube.com/@SilverDaBomb',
+          img: 'https://i.imgur.com/qdrvwhn.png'
+        },
+        {
+          name: 'Discord',
+          url: 'https://discord.gg/QtqtfWex6f',
+          img: 'https://i.imgur.com/V0MHZ54.png'
+        },
+        {
+          name: 'TikTok',
+          url: 'https://www.tiktok.com/@silver.ground',
+          img: 'https://i.imgur.com/dkvpuNL.png'
+        }
+      ];
+
+      linksData.forEach(({name, url, img}) => {
+        const a = document.createElement('a');
+        a.className = 'icon-link';
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.innerHTML = `<img src="${img}" alt="${name} icon" /><span>${name}</span>`;
+        a.addEventListener('click', playClickSound);
+        iconsDiv.appendChild(a);
+      });
+
+      container.appendChild(title);
+      container.appendChild(iconsDiv);
+      document.body.appendChild(container);
+
+      // Add back button
+      const backButton = document.createElement('button');
+      backButton.id = 'back-button';
+      backButton.textContent = '← Back';
+      document.body.appendChild(backButton);
+
+      backButton.addEventListener('click', () => {
+        playClickSound();
+        // Animate out the links page
+        const icons = document.querySelectorAll('.icon-link');
+        icons.forEach(icon => {
+          icon.style.transform = 'scale(0.8)';
+          icon.style.opacity = '0';
+          icon.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        });
+
+        // Remove elements after animation completes
+        setTimeout(() => {
+          container.remove();
+          backButton.remove();
+
+          // Show volume control
+          document.getElementById('volume-control').style.display = 'flex';
+          document.getElementById('command-container').style.display = 'block';
+
+          // Restore bio page elements
+          document.body.classList.remove('links');
+          document.body.classList.add('bio');
+
+          // Re-add glow-container
+          const glowContainer = document.createElement('div');
+          glowContainer.className = 'glow-container';
+          glowContainer.innerHTML = `
+            <div class="profile-wrapper" id="profile-wrapper" title="Click to open links">
+              <div class="profile-pic-container">
+                <img class="profile-pic" src="https://i.imgur.com/OMTn3DM.png" alt="Silver Profile Picture" />
+              </div>
+              <div class="orbit-star first" id="orbit-star-1"></div>
+              <div class="orbit-star second" id="orbit-star-2"></div>
+              <div class="orbit-star first" id="orbit-star-3"></div>
+              <div class="orbit-star second" id="orbit-star-4"></div>
+            </div>
+            <h1 id="name">
+              <span>S</span><span>I</span><span>L</span><span>V</span><span>E</span><span>R</span>
+            </h1>
+          `;
+          document.body.appendChild(glowContainer);
+
+          // Re-setup profile hover orbit stars shrink effect & click to links page
+          const newProfileWrapper = document.getElementById('profile-wrapper');
+          const newOrbitStars = [
+            document.getElementById('orbit-star-1'),
+            document.getElementById('orbit-star-2'),
+            document.getElementById('orbit-star-3'),
+            document.getElementById('orbit-star-4')
+          ];
+          
+          // Restart orbit animation
+          const newOrbitAngles = [0, Math.PI/2, Math.PI, 3*Math.PI/2];
+          
+          function restartOrbitAnimation() {
+            const centerX = newProfileWrapper.offsetLeft + newProfileWrapper.offsetWidth / 2;
+            const centerY = newProfileWrapper.offsetTop + newProfileWrapper.offsetHeight / 2;
+            
+            newOrbitStars.forEach((star, index) => {
+              newOrbitAngles[index] += orbitSpeeds[index] * 0.01;
+              const x = centerX + Math.cos(newOrbitAngles[index]) * orbitRadius;
+              const y = centerY + Math.sin(newOrbitAngles[index]) * orbitRadius;
+              star.style.left = `${x - centerX + 110}px`;
+              star.style.top = `${y - centerY + 110}px`;
+            });
+            
+            requestAnimationFrame(restartOrbitAnimation);
+          }
+          
+          restartOrbitAnimation();
+
+          newProfileWrapper.addEventListener('mouseenter', () => {
+            newOrbitStars.forEach(s => {
+              s.style.opacity = '0';
+              s.style.transform = 'scale(0)';
+            });
+          });
+          newProfileWrapper.addEventListener('mouseleave', () => {
+            newOrbitStars.forEach(s => {
+              s.style.opacity = '1';
+              s.style.transform = '';
+            });
+          });
+          newProfileWrapper.addEventListener('click', createLinksPage);
+
+          // Re-setup name glow animation
+          const newNameSpans = document.querySelectorAll('h1#name span');
+          activeIndex = 0;
+          clearInterval(nameGlowTimer);
+          nameGlowTimer = setInterval(() => {
+            newNameSpans.forEach((span,i) => span.classList.remove('active'));
+            newNameSpans[activeIndex].classList.add('active');
+            activeIndex = (activeIndex +1) % newNameSpans.length;
+          }, glowInterval);
+          newNameSpans[0].classList.add('active');
+        }, 300);
+      });
+    }
+
+    // Setup initial click on profile pic to go to links page
+    profileWrapper.addEventListener('click', createLinksPage);
+  </script>
+</body>
+</html>
